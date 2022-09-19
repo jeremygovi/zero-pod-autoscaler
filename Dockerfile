@@ -11,7 +11,7 @@ COPY go.mod go.sum /src/zero-pod-autoscaler/
 RUN go mod download
 
 COPY . ./
-RUN --mount=type=cache,target=/tmp/gocache GOCACHE=/tmp/gocache CGO_ENABLED=0 go build .
+RUN CGO_ENABLED=0 go build .
 
 FROM scratch
 COPY --from=builder /src/zero-pod-autoscaler/zero-pod-autoscaler /bin/zero-pod-autoscaler

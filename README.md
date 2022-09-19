@@ -60,7 +60,7 @@ spec:
       serviceAccountName: zpa
       containers:
       - name: zpa
-        image: greenkeytech/zero-pod-autoscaler:0.4.0
+        image: jeremygovi/zero-pod-autoscaler:0.4.0
         imagePullPolicy: IfNotPresent
         args:
         - --namespace=$(NAMESPACE)

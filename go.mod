@@ -1,4 +1,4 @@
-module github.com/greenkeytech/zero-pod-autoscaler
+module github.com/jeremygovi/zero-pod-autoscaler
 
 go 1.13
 

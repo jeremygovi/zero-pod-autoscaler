@@ -31,9 +31,9 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/greenkeytech/zero-pod-autoscaler/pkg/kubeconfig"
-	"github.com/greenkeytech/zero-pod-autoscaler/pkg/proxy"
-	"github.com/greenkeytech/zero-pod-autoscaler/pkg/scaler"
+	"github.com/jeremygovi/zero-pod-autoscaler/pkg/kubeconfig"
+	"github.com/jeremygovi/zero-pod-autoscaler/pkg/proxy"
+	"github.com/jeremygovi/zero-pod-autoscaler/pkg/scaler"
 )
 
 // global health status
