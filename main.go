@@ -71,6 +71,7 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 		}
 
 		log.Printf("%s->%s: accept connection", conn.RemoteAddr(), conn.LocalAddr())
+		log.Printf("DEBUG target %s", target)
 
 		wg.Add(1)
 		go func() {
