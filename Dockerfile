@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:experimental
 
-FROM golang:1.19.1-bullseye
+FROM golang:1.19.1-bullseye AS builder
 
 RUN apt-get update && \
     apt-get install git
