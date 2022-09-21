@@ -64,6 +64,7 @@ func New(
 	var deploy appsv1.Deployment
 	var ep corev1.Endpoints
 
+	log.Printf("Watching namespace %s", namespace)
 	if list, err := client.AppsV1().Deployments(namespace).List(deployOptions); err != nil {
 		return nil, err
 	} else {
@@ -94,8 +95,9 @@ func New(
 		ep = list.Items[0]
 	}
 
-	log.Printf("watching %s/%s", "Endpoints", ep.Name)
-	log.Printf("watching %s/%s", "Deployment", deploy.Name)
+	log.Printf("Watching %s/%s", "Endpoints", ep.Name)
+	log.Printf("Watching %s/%s", "Target", target)
+	log.Printf("Watching %s/%s", "Deployment", deploy.Name)
 
 	fieldSelector := fmt.Sprintf("metadata.name=%s", deploy.Name)
 
