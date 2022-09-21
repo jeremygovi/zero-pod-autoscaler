@@ -68,7 +68,9 @@ func BiDiCopy(a, b *net.TCPConn) error {
 // ProxyTo dials a connection to remote then (bi-directionally) copies
 // everything from src to the new connection.
 func ProxyTo(src net.Conn, remote string) error {
-	dst, err := net.DialTimeout("tcp", remote, 5*time.Second)
+	log.Printf("Try to connect to upstream %s (Timeout 30s)", remote)
+	dst, err := net.DialTimeout("tcp", remote, 30*time.Second)
+
 	if err != nil {
 		return err
 	}
