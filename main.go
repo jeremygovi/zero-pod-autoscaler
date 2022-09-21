@@ -70,8 +70,7 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 			return fmt.Errorf("failed to accept connection: %w", err)
 		}
 
-		log.Printf("%s->%s: accept connection", conn.RemoteAddr(), conn.LocalAddr())
-		log.Printf("DEBUG target %s", target)
+		log.Printf("Connection coming from %s", conn.RemoteAddr())
 
 		wg.Add(1)
 		go func() {
@@ -86,34 +85,30 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 				// reporting available, but not much
 				// we can do
 
-				select {
-				case <-sc.Available():
-					return proxy.ProxyTo(conn, target)
-				case <-time.After(0):
-					// was not immediately available; continue below
-				}
+				// select {
+				// case <-sc.Available():
+				// 	return proxy.ProxyTo(conn, target)
+				// case <-time.After(0):
+				// 	// was not immediately available; continue below
+				// }
 
-				log.Printf("%s->%s: waiting for upstream to become available",
-					conn.RemoteAddr(), conn.LocalAddr())
-				select {
-				case <-sc.Available():
-					log.Printf("%s->%s: upstream available after %s",
-						conn.RemoteAddr(), conn.LocalAddr(),
-						time.Since(start))
-					return proxy.ProxyTo(conn, target)
-				case <-time.After(5 * time.Minute):
-					return fmt.Errorf("timed out waiting for available upstream")
-				}
+				//log.Printf("Waiting for upstream %s to become available", target)
+				//select {
+				//case <-sc.Available():
+				//log.Printf("Upstream available after %s", time.Since(start))
+				return proxy.ProxyTo(conn, target)
+				//case <-time.After(5 * time.Minute):
+				//	return fmt.Errorf("timed out waiting for available upstream")
+				//}
 			})
 			if err != nil {
-				log.Printf("%s->%s: failed to proxy: %v", conn.RemoteAddr(), conn.LocalAddr(), err)
+				log.Printf("Failed to proxy: %v", err)
 				SetUnhealthy()
 			} else {
 				SetHealthy()
 			}
 
-			log.Printf("%s->%s: close connection after %s",
-				conn.RemoteAddr(), conn.LocalAddr(), time.Since(start))
+			log.Printf("Close connection after %s", time.Since(start))
 		}()
 
 		return nil
