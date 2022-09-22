@@ -76,8 +76,8 @@ func ProxyTo(src net.Conn, remote string) error {
 	}
 	defer dst.Close()
 
-	log.Printf("INFO: %s->%s: connected to upstream %s",
-		src.RemoteAddr(), src.LocalAddr(), remote)
+	log.Printf("INFO: Successfully sent request from %s to %s",
+		src.RemoteAddr(), remote)
 
 	_dst, ok := dst.(*net.TCPConn)
 	if !ok {
