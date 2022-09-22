@@ -54,13 +54,13 @@ func BiDiCopy(a, b *net.TCPConn) error {
 	}
 
 	if err1 != nil && err2 != nil {
-		return fmt.Errorf("failed to copy steams: %w; %w", err1, err2)
+		return fmt.Errorf("ERROR: failed to copy steams: %w; %w", err1, err2)
 	}
 	if err1 != nil {
-		return fmt.Errorf("failed to copy steam: %w", err1)
+		return fmt.Errorf("ERROR: failed to copy steam: %w", err1)
 	}
 	if err2 != nil {
-		return fmt.Errorf("failed to copy stream: %w", err2)
+		return fmt.Errorf("ERROR: failed to copy stream: %w", err2)
 	}
 	return nil
 }
@@ -68,7 +68,7 @@ func BiDiCopy(a, b *net.TCPConn) error {
 // ProxyTo dials a connection to remote then (bi-directionally) copies
 // everything from src to the new connection.
 func ProxyTo(src net.Conn, remote string) error {
-	log.Printf("Try to connect to upstream %s (Timeout 30s)", remote)
+	//log.Printf("Try to connect to upstream %s (Timeout 30s)", remote)
 	dst, err := net.DialTimeout("tcp", remote, 30*time.Second)
 
 	if err != nil {
@@ -76,17 +76,17 @@ func ProxyTo(src net.Conn, remote string) error {
 	}
 	defer dst.Close()
 
-	log.Printf("%s->%s: connected to upstream %s",
+	log.Printf("INFO: %s->%s: connected to upstream %s",
 		src.RemoteAddr(), src.LocalAddr(), remote)
 
 	_dst, ok := dst.(*net.TCPConn)
 	if !ok {
-		return fmt.Errorf("dst impossibly not a tcp connection: %T", dst)
+		return fmt.Errorf("ERROR: dst impossibly not a tcp connection: %T", dst)
 	}
 
 	_src, ok := src.(*net.TCPConn)
 	if !ok {
-		return fmt.Errorf("src not a tcp connection: %T", src)
+		return fmt.Errorf("ERROR: src not a tcp connection: %T", src)
 	}
 
 	return BiDiCopy(_dst, _src)

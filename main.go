@@ -45,13 +45,13 @@ func Healthy() bool {
 
 func SetUnhealthy() {
 	if atomic.CompareAndSwapInt32(&globalHealth, 1, 0) {
-		log.Printf("system is unhealthy")
+		log.Printf("WARNING: system is unhealthy")
 	}
 }
 
 func SetHealthy() {
 	if atomic.CompareAndSwapInt32(&globalHealth, 0, 1) {
-		log.Printf("system is healthy")
+		log.Printf("INFO: system is healthy")
 	}
 }
 
@@ -67,10 +67,10 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 	case a := <-accepts:
 		conn, err := a.conn, a.err
 		if err != nil {
-			return fmt.Errorf("failed to accept connection: %w", err)
+			return fmt.Errorf("ERROR: failed to accept connection: %w", err)
 		}
 
-		log.Printf("Connection coming from %s", conn.RemoteAddr())
+		log.Printf("INFO: Request coming from %s", conn.RemoteAddr())
 
 		wg.Add(1)
 		go func() {
@@ -85,30 +85,30 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 				// reporting available, but not much
 				// we can do
 
-				// select {
-				// case <-sc.Available():
-				// 	return proxy.ProxyTo(conn, target)
-				// case <-time.After(0):
-				// 	// was not immediately available; continue below
-				// }
+				select {
+				case <-sc.Available():
+					return proxy.ProxyTo(conn, target)
+				case <-time.After(0):
+					// was not immediately available; continue below
+				}
 
-				//log.Printf("Waiting for upstream %s to become available", target)
-				//select {
-				//case <-sc.Available():
-				//log.Printf("Upstream available after %s", time.Since(start))
-				return proxy.ProxyTo(conn, target)
-				//case <-time.After(5 * time.Minute):
-				//	return fmt.Errorf("timed out waiting for available upstream")
-				//}
+				log.Printf("INFO: Waiting for upstream %s to become available", target)
+				select {
+				case <-sc.Available():
+					log.Printf("SUCCESS: Upstream available after %s", time.Since(start))
+					return proxy.ProxyTo(conn, target)
+				case <-time.After(5 * time.Minute):
+					return fmt.Errorf("ERROR: Timed out waiting for available upstream (5 min wait)")
+				}
 			})
 			if err != nil {
-				log.Printf("Failed to proxy: %v", err)
+				log.Printf("ERROR: Failed to proxy: %v", err)
 				SetUnhealthy()
 			} else {
 				SetHealthy()
 			}
 
-			log.Printf("Close connection after %s", time.Since(start))
+			//log.Printf("Close connection after %s", time.Since(start))
 		}()
 
 		return nil
@@ -118,9 +118,9 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 func ListenAndProxy(ctx context.Context, addr, target string, sc *scaler.Scaler) error {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		return fmt.Errorf("failed to listen on `%s`: %v", err)
+		return fmt.Errorf("ERROR: failed to listen on `%s`: %v", addr, err)
 	}
-	log.Printf("proxy listening on %s", addr)
+	log.Printf("INFO: Proxy listening on %s", addr)
 
 	accepts := make(chan acceptResult)
 	stop := make(chan struct{})
@@ -143,14 +143,14 @@ func ListenAndProxy(ctx context.Context, addr, target string, sc *scaler.Scaler)
 	for {
 		err := Iterate(ctx, accepts, wg, target, sc)
 		if err != nil {
-			log.Printf("refusing new connections")
+			log.Printf("WARNING: refusing new connections")
 			ln.Close()
 			close(stop)
 			break
 		}
 	}
 
-	log.Printf("draining existing connections")
+	log.Printf("INFO: draining existing connections")
 	wg.Wait()
 	return nil
 }
@@ -168,7 +168,7 @@ func initializeSignalHandlers(cancel func()) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		log.Printf("received signal: %s", <-c)
+		log.Printf("WARNING: received signal: %s", <-c)
 		cancel()
 	}()
 }
@@ -176,10 +176,10 @@ func initializeSignalHandlers(cancel func()) {
 func runAdminServer(ctx context.Context, addr string) error {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
-		return fmt.Errorf("failed to listen on `%s`: %v", addr, err)
+		return fmt.Errorf("ERROR: failed to listen on `%s`: %v", addr, err)
 	}
 
-	log.Printf("admin server listening on %s", addr)
+	log.Printf("INFO: admin server listening on %s", addr)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(resp http.ResponseWriter, req *http.Request) {
@@ -198,7 +198,7 @@ func runAdminServer(ctx context.Context, addr string) error {
 	}
 	go func() {
 		if err := s.Serve(ln); err != nil {
-			log.Printf("admin server exited: %v", err)
+			log.Printf("WARNING: admin server exited: %v", err)
 		}
 	}()
 
@@ -232,7 +232,7 @@ func main() {
 
 	clientset, err := kubeconfig.BuildClientset(loadingRules, configOverrides)
 	if err != nil {
-		log.Fatalf("error building kubernetes clientset: %v", err)
+		log.Fatalf("FATAL: error building kubernetes clientset: %v", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -247,7 +247,7 @@ func main() {
 		defer wg.Done()
 		err := runAdminServer(ctx, *adminAddr)
 		if err != nil {
-			log.Printf("admin server exited: %v")
+			log.Printf("WARNING: admin server exited: %v")
 		}
 	}()
 
@@ -264,7 +264,7 @@ func main() {
 	go func() {
 		err := sc.Run(context.Background())
 		if err != nil {
-			log.Printf("scaler exited: %v", err)
+			log.Printf("WARNING: scaler exited: %v", err)
 		}
 	}()
 
@@ -275,10 +275,10 @@ func main() {
 		defer wg.Done()
 		err := ListenAndProxy(ctx, *addr, *target, sc)
 		if err != nil {
-			log.Printf("proxy exited: %v", err)
+			log.Printf("WARNING: proxy exited: %v", err)
 		}
 	}()
 
 	wg.Wait()
-	log.Printf("exiting")
+	log.Printf("INFO: Bye bye...")
 }

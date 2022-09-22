@@ -64,16 +64,16 @@ func New(
 	var deploy appsv1.Deployment
 	var ep corev1.Endpoints
 
-	log.Printf("Watching namespace %s", namespace)
+	log.Printf("INFO: Watching namespace %s", namespace)
 	if list, err := client.AppsV1().Deployments(namespace).List(deployOptions); err != nil {
 		return nil, err
 	} else {
 		if len(list.Items) > 1 {
-			return nil, fmt.Errorf("matched %d Deployments", len(list.Items))
+			return nil, fmt.Errorf("ERROR: matched more than 1 Deployment (%d)", len(list.Items))
 		}
 
 		if len(list.Items) == 0 {
-			return nil, fmt.Errorf("did not match any Deployments")
+			return nil, fmt.Errorf("ERROR: 0 Deployment found")
 		}
 
 		deploy = list.Items[0]
@@ -85,19 +85,19 @@ func New(
 		}
 	} else {
 		if len(list.Items) > 1 {
-			return nil, fmt.Errorf("matched %d Endpoints", len(list.Items))
+			return nil, fmt.Errorf("ERROR: matched more than 1 Endpoint (%d)", len(list.Items))
 		}
 
 		if len(list.Items) == 0 {
-			return nil, fmt.Errorf("did not match any Endpoints")
+			return nil, fmt.Errorf("ERROR: 0 Endpoint found")
 		}
 
 		ep = list.Items[0]
 	}
 
-	log.Printf("Watching %s/%s", "Endpoints", ep.Name)
-	log.Printf("Watching %s/%s", "Target", target)
-	log.Printf("Watching %s/%s", "Deployment", deploy.Name)
+	log.Printf("INFO: Watching %s/%s", "Endpoints", ep.Name)
+	log.Printf("INFO: Watching %s/%s", "Target", target)
+	log.Printf("INFO: Watching %s/%s", "Deployment", deploy.Name)
 
 	fieldSelector := fmt.Sprintf("metadata.name=%s", deploy.Name)
 
@@ -166,7 +166,7 @@ func (sc *Scaler) TryConnect(ctx context.Context) error {
 		timeout_ms *= factor
 		conn, err := dialer.DialContext(subctx, "tcp", sc.Target)
 		if err != nil {
-			log.Printf("failed test connection to %s: %v", sc.Target, err)
+			log.Printf("ERROR: failed test connection to %s: %v", sc.Target, err)
 			continue
 		}
 
@@ -208,7 +208,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				}
 
 				if r != readyAddresses || nr != notReadyAddresses {
-					log.Printf("%s/%s: readyAddresses=%d notReadyAddresses=%d",
+					log.Printf("INFO: %s/%s: readyAddresses=%d notReadyAddresses=%d",
 						"Endpoints", resource.Name, r, nr)
 				}
 
@@ -223,16 +223,16 @@ func (sc *Scaler) Run(ctx context.Context) error {
 					continue
 				}
 
-				log.Printf("%s/%s has ready addresses; confirming can connect to %s",
+				log.Printf("INFO: %s/%s has ready addresses; confirming can connect to %s",
 					"Endpoints", resource.Name, sc.Target)
 
 				subctx, _ := context.WithTimeout(ctx, 15*time.Second)
 				if err := sc.TryConnect(subctx); err != nil {
-					log.Fatalf("%s/%s has ready addresses but failed to connect to %s: %v",
+					log.Fatalf("ERROR: %s/%s has ready addresses but failed to connect to %s: %v",
 						"Endpoints", resource.Name, sc.Target, err)
 				}
 
-				log.Printf("%s available; notifying waiters", resource.Name)
+				log.Printf("INFO: %s available; notifying waiters", resource.Name)
 				close(available)
 				available = nil
 			case *appsv1.Deployment:
@@ -246,7 +246,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 
 				if resource.Spec.Replicas != nil {
 					if replicas != *resource.Spec.Replicas {
-						log.Printf("%s/%s: replicas: %d",
+						log.Printf("INFO: %s/%s: replicas: %d",
 							"Deployment", resource.Name, *resource.Spec.Replicas)
 					}
 					replicas = *resource.Spec.Replicas
@@ -281,7 +281,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 		case attemptNumber := <-sc.scaleUp:
 			if replicas == 0 {
 				if err := sc.updateScale(resourceVersion, 1); err != nil {
-					log.Printf("%s/%s: failed to scale up: %v %T",
+					log.Printf("ERROR: %s/%s: failed to scale up: %v %T",
 						"Deployment", sc.Name, err, err)
 					// try again; usual error is that resource is out of date
 					// TODO: try again ONLY when error is that resource is out of date
@@ -296,11 +296,11 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			}
 
 			if connCount == 0 && replicas > 0 && time.Now().After(scaleDownAt) {
-				log.Printf("%s/%s: scaling down after %s: replicas=%d connections=%d",
+				log.Printf("INFO: %s/%s: scaling down after %s: replicas=%d connections=%d",
 					"Deployment", sc.Name, sc.TTL, replicas, connCount)
 
 				if err := sc.updateScale(resourceVersion, 0); err != nil {
-					log.Printf("%s/%s: failed to scale to zero: %v",
+					log.Printf("ERROR: %s/%s: failed to scale to zero: %v",
 						"Deployment", sc.Name, err)
 				}
 			}
@@ -325,16 +325,16 @@ func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
 
 	body, err := json.Marshal(patch)
 	if err != nil {
-		log.Printf("failed to marshal patch to json: %v", err)
+		log.Printf("ERROR: failed to marshal patch to json: %v", err)
 	}
 
 	if _, err := sc.Client.AppsV1().Deployments(sc.Namespace).
 		Patch(sc.Name, types.JSONPatchType, body); err != nil {
-		log.Printf("%s/%s: failed to patch: %v",
+		log.Printf("ERROR: %s/%s: failed to patch: %v",
 			"Deployment", sc.Name, err)
 	}
 
-	log.Printf("%s/%s: updated scaleDownAt to %s from now",
+	log.Printf("INFO: %s/%s: updated scaleDownAt to %s from now",
 		"Deployment", sc.Name, sc.TTL)
 }
 
@@ -352,7 +352,7 @@ func (sc *Scaler) updateScale(resourceVersion string, replicas int32) error {
 		return err
 	}
 
-	log.Printf("%s/%s: scaled to %d", "Deployment", sc.Name, replicas)
+	log.Printf("INFO: %s/%s: scaled to %d", "Deployment", sc.Name, replicas)
 
 	return nil
 }
