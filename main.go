@@ -74,7 +74,7 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 
 		wg.Add(1)
 		go func() {
-			start := time.Now()
+			//start := time.Now()
 
 			defer wg.Done()
 			defer conn.Close()
