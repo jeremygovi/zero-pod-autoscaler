@@ -272,7 +272,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			log.Printf("DEBUG: reply := <-sc.availableRequest")
 			// set time to scale down
 			sc.extendScaleDownAtMaybe(scaleDownAt)
-			log.Printf("DEBUG: AFTER sc.extendScaleDownAtMaybe")
+			log.Printf("DEBUG: AFTER sc.extendScaleDownAtMaybe %+v", readyAddresses)
 			if readyAddresses > 0 {
 				log.Printf("DEBUG: reply readyAddresses > 0")
 				// is currently available; send the already-closed channel
@@ -323,10 +323,10 @@ func (sc *Scaler) Run(ctx context.Context) error {
 }
 
 func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
-	log.Printf("DEBUG: START extendScaleDownAtMaybe")
-	if !time.Now().After(scaleDownAt.Add(sc.TTL / -2)) {
-		return
-	}
+	log.Printf("DEBUG: START extendScaleDownAtMaybe %+v", scaleDownAt)
+	// if !time.Now().After(scaleDownAt.Add(sc.TTL / -2)) {
+	// 	return
+	// }
 
 	path := fmt.Sprintf("/metadata/annotations/%s", JsonPatchEscape(KeyScaleDownAt))
 
@@ -390,7 +390,7 @@ func (sc *Scaler) Available() (available chan struct{}) {
 
 	reply := make(chan chan struct{})
 
-	log.Printf("DEBUG: reply: %v", reply)
+	log.Printf("DEBUG: reply: %+v", reply)
 	sc.availableRequest <- reply
 	return <-reply
 }
