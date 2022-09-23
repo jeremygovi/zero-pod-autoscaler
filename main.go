@@ -92,6 +92,9 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 				case <-time.After(0):
 					log.Printf("DEBUG: time.After(0): was not immediately available; continue below")
 					// was not immediately available; continue below
+				default:
+					log.Printf("DEBUG: DEFAULT CASE 1")
+					return fmt.Errorf("ERROR: DEFAULT CASE 1")
 				}
 
 				log.Printf("INFO: Waiting for upstream %s to become available", target)
@@ -278,6 +281,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		log.Printf("DEBUG: ListenAndProxy: %s %s", *addr, *target)
 		err := ListenAndProxy(ctx, *addr, *target, sc)
 		if err != nil {
 			log.Printf("WARNING: proxy exited: %v", err)

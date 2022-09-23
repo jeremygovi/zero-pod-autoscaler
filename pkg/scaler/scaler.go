@@ -84,6 +84,7 @@ func New(
 			return nil, err
 		}
 	} else {
+		log.Printf("DEBUG: Endpoints list: %+v", list.Items)
 		if len(list.Items) > 1 {
 			return nil, fmt.Errorf("ERROR: matched more than 1 Endpoint (%d)", len(list.Items))
 		}
