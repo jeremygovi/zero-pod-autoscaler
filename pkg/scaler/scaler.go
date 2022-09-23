@@ -202,7 +202,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			log.Printf("DEBUG: sc.connectionInc")
 			connCount += i
 		case obj := <-sc.updated:
-			log.Printf("DEBUG: sc.updated")
+			//log.Printf("DEBUG: sc.updated") -> passe tres souvent dedans
 			switch resource := obj.(type) {
 			case *corev1.Endpoints:
 				log.Printf("DEBUG: corev1.Endpoints")
@@ -243,7 +243,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				close(available)
 				available = nil
 			case *appsv1.Deployment:
-				log.Printf("DEBUG: appsv1.Deployment")
+				//log.Printf("DEBUG: appsv1.Deployment") -> passe tres souvent dans ce cas
 				resourceVersion = resource.ResourceVersion
 
 				if timestamp, ok := resource.Annotations[KeyScaleDownAt]; ok {
