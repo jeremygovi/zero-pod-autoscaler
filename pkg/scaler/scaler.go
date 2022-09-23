@@ -285,6 +285,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				log.Printf("DEBUG: reply available == nil")
 				available = make(chan struct{})
 			}
+			log.Printf("DEBUG: AFTER sc.extendScaleDownAtMaybe available %+v", available)
 			reply <- available
 
 			if replicas == 0 {
@@ -318,12 +319,13 @@ func (sc *Scaler) Run(ctx context.Context) error {
 						"Deployment", sc.Name, err)
 				}
 			}
+			log.Printf("DEBUG: ELSE replicas %+v", replicas)
 		}
 	}
 }
 
 func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
-	log.Printf("DEBUG: START extendScaleDownAtMaybe %+v", scaleDownAt)
+	// log.Printf("DEBUG: START extendScaleDownAtMaybe %+v", scaleDownAt)
 	if !time.Now().After(scaleDownAt.Add(sc.TTL / -2)) {
 		return
 	}
