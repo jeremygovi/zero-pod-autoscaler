@@ -304,7 +304,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				}
 			}
 		case <-time.After(1 * time.Second):
-			log.Printf("DEBUG: case <-time.After(1 * time.Second)")
+			// log.Printf("DEBUG: case <-time.After(1 * time.Second)")
 			if connCount > 0 {
 				sc.extendScaleDownAtMaybe(scaleDownAt)
 			}
