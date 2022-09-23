@@ -154,6 +154,7 @@ func New(
 }
 
 func (sc *Scaler) TryConnect(ctx context.Context) error {
+	log.Printf("DEBUG: entering scaler.TryConnect function")
 	dialer := net.Dialer{}
 	timeout_ms := 500.0
 	factor := 2.0 // timeout series: 500, 1s, 2s, 4s...
@@ -164,6 +165,7 @@ func (sc *Scaler) TryConnect(ctx context.Context) error {
 
 		subctx, _ := context.WithTimeout(ctx, time.Duration(timeout_ms)*time.Millisecond)
 		timeout_ms *= factor
+		log.Printf("DEBUG: starting test connection to %s. subctx: %v", sc.Target, subctx)
 		conn, err := dialer.DialContext(subctx, "tcp", sc.Target)
 		if err != nil {
 			log.Printf("ERROR: failed test connection to %s: %v", sc.Target, err)
@@ -176,6 +178,7 @@ func (sc *Scaler) TryConnect(ctx context.Context) error {
 }
 
 func (sc *Scaler) Run(ctx context.Context) error {
+	log.Printf("DEBUG: entering saceler.Run function")
 	replicas := int32(-1)
 	readyAddresses := -1
 	notReadyAddresses := -1
@@ -358,6 +361,7 @@ func (sc *Scaler) updateScale(resourceVersion string, replicas int32) error {
 }
 
 func (sc *Scaler) UseConnection(f func() error) error {
+	log.Printf("DEBUG: entering saceler.UseConnection function")
 	sc.connectionInc <- 1
 	err := f()
 	sc.connectionInc <- -1
@@ -368,6 +372,7 @@ func (sc *Scaler) UseConnection(f func() error) error {
 // available. The returned channel may already be closed if upstream
 // is currently available.
 func (sc *Scaler) Available() (available chan struct{}) {
+	log.Printf("DEBUG: entering saceler.Available function")
 	reply := make(chan chan struct{})
 	sc.availableRequest <- reply
 	return <-reply
