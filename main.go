@@ -225,7 +225,8 @@ func main() {
 	deployment := flags.String("deployment", "", "name of Deployment to scale")
 	labelSelector := flags.StringP("selector", "l", "", "label selector of Deployment")
 	ep := flags.String("endpoints", "", "name of Endpoints to watch for ready addresses")
-	target := flags.String("target", "", "target address to which to proxy requests")
+	// target := flags.String("target", "", "target address to which to proxy requests")
+	target := "oc-12345-website"
 	ttl := flags.Duration("ttl", 1*time.Hour, "idle duration before scaling to zero")
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
