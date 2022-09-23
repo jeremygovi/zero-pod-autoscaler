@@ -129,13 +129,19 @@ func New(
 	}
 
 	if informer := factory.Apps().V1().Deployments().Informer(); true {
+		log.Printf("DEBUG: factory.Apps().V1().Deployments().Informer")
 		informer.AddEventHandler(funcs)
 		go informer.Run(ctx.Done())
+	} else {
+		log.Printf("DEBUG: ERROR factory.Apps().V1().Deployments().Informer")
 	}
 
 	if informer := factory.Core().V1().Endpoints().Informer(); true {
+		log.Printf("DEBUG: factory.Core().V1().Endpoints().Informer")
 		informer.AddEventHandler(funcs)
 		go informer.Run(ctx.Done())
+	} else {
+		log.Printf("DEBUG: ERROR factory.Core().V1().Endpoints().Informer")
 	}
 
 	sc := &Scaler{
