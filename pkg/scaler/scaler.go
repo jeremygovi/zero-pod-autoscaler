@@ -65,7 +65,7 @@ func New(
 	var ep corev1.Endpoints
 
 	log.Printf("INFO: Watching namespace %s", namespace)
-	if list, err := client.AppsV1().Deployments(namespace).List(deployOptions); err != nil {
+	if list, err := client.AppsV1().Deployments(namespace).List(context.TODO(), deployOptions); err != nil {
 		return nil, err
 	} else {
 		if len(list.Items) > 1 {
@@ -79,7 +79,7 @@ func New(
 		deploy = list.Items[0]
 	}
 
-	if list, err := client.CoreV1().Endpoints(namespace).List(epOptions); err != nil {
+	if list, err := client.CoreV1().Endpoints(namespace).List(context.TODO(), epOptions); err != nil {
 		if err != nil {
 			return nil, err
 		}
@@ -343,7 +343,7 @@ func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
 	}
 
 	if _, err := sc.Client.AppsV1().Deployments(sc.Namespace).
-		Patch(sc.Name, types.JSONPatchType, body); err != nil {
+		Patch(context.TODO(), sc.Name, types.JSONPatchType, body, metav1.PatchOptions{}); err != nil {
 		log.Printf("ERROR: %s/%s: failed to patch: %v",
 			"Deployment", sc.Name, err)
 	}
@@ -362,7 +362,7 @@ func (sc *Scaler) updateScale(resourceVersion string, replicas int32) error {
 
 	scale.Spec.Replicas = replicas
 
-	if _, err := deployments.UpdateScale(sc.Name, &scale); err != nil {
+	if _, err := deployments.UpdateScale(context.TODO(), sc.Name, &scale, metav1.UpdateOptions{}); err != nil {
 		return err
 	}
 
