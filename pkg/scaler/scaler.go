@@ -327,7 +327,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 						"Deployment", sc.Name, err)
 				}
 			}
-			log.Printf("DEBUG: ELSE replicas: %+v connCount: %+v", replicas, connCount)
+			// log.Printf("DEBUG: ELSE replicas: %+v connCount: %+v", replicas, connCount)
 		}
 	}
 }
@@ -366,6 +366,7 @@ func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
 }
 
 func (sc *Scaler) updateScale(resourceVersion string, replicas int32) error {
+	log.Printf("DEBUG: entering updateScale function")
 	deployments := sc.Client.AppsV1().Deployments(sc.Namespace)
 
 	scale := autoscalingv1.Scale{}
@@ -374,7 +375,7 @@ func (sc *Scaler) updateScale(resourceVersion string, replicas int32) error {
 	scale.ResourceVersion = resourceVersion
 
 	scale.Spec.Replicas = replicas
-
+	log.Printf("DEBUG: deployname UpdateScale function %+v", sc.Name)
 	if _, err := deployments.UpdateScale(context.TODO(), sc.Name, &scale, metav1.UpdateOptions{}); err != nil {
 		return err
 	}

@@ -92,9 +92,9 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 				case <-time.After(0):
 					log.Printf("DEBUG: time.After(0): was not immediately available; continue below")
 					// was not immediately available; continue below
-				default:
-					log.Printf("DEBUG: DEFAULT CASE 1")
-					return fmt.Errorf("ERROR: DEFAULT CASE 1")
+					// default:
+					// 	log.Printf("DEBUG: DEFAULT CASE 1")
+					// 	return fmt.Errorf("ERROR: DEFAULT CASE 1")
 				}
 
 				log.Printf("INFO: Waiting for upstream %s to become available", target)
