@@ -178,7 +178,7 @@ func (sc *Scaler) TryConnect(ctx context.Context) error {
 }
 
 func (sc *Scaler) Run(ctx context.Context) error {
-	log.Printf("DEBUG: entering saceler.Run function")
+	log.Printf("DEBUG: entering scaler.Run function")
 	replicas := int32(-1)
 	readyAddresses := -1
 	notReadyAddresses := -1
@@ -196,12 +196,16 @@ func (sc *Scaler) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			log.Printf("DEBUG: ctx.done")
 			return fmt.Errorf("%v", ctx.Err())
 		case i := <-sc.connectionInc:
+			log.Printf("DEBUG: sc.connectionInc")
 			connCount += i
 		case obj := <-sc.updated:
+			log.Printf("DEBUG: sc.updated")
 			switch resource := obj.(type) {
 			case *corev1.Endpoints:
+				log.Printf("DEBUG: corev1.Endpoints")
 				r := 0
 				nr := 0
 
@@ -239,6 +243,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				close(available)
 				available = nil
 			case *appsv1.Deployment:
+				log.Printf("DEBUG: appsv1.Deployment")
 				resourceVersion = resource.ResourceVersion
 
 				if timestamp, ok := resource.Annotations[KeyScaleDownAt]; ok {
@@ -256,6 +261,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				}
 			}
 		case obj := <-sc.deleted:
+			log.Printf("DEBUG: sc.deleted")
 			switch resource := obj.(type) {
 			case *corev1.Endpoints:
 				log.Fatalf("INFO: Received notification from kubernetes API: %s/%s: deleted", "Endpoints", resource.Name)
@@ -263,10 +269,12 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				log.Fatalf("INFO: Received notification from kubernetes API: %s/%s: deleted", "Deployment", resource.Name)
 			}
 		case reply := <-sc.availableRequest:
+			log.Printf("DEBUG: reply := <-sc.availableRequest")
 			// set time to scale down
 			sc.extendScaleDownAtMaybe(scaleDownAt)
 
 			if readyAddresses > 0 {
+				log.Printf("DEBUG: reply readyAddresses > 0")
 				// is currently available; send the already-closed channel
 				reply <- closedChan
 				continue
@@ -274,6 +282,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 
 			// nothing ready, reply with channel that gets closed when ready
 			if available == nil {
+				log.Printf("DEBUG: reply available == nil")
 				available = make(chan struct{})
 			}
 			reply <- available
@@ -282,6 +291,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				go func() { sc.scaleUp <- 0 }()
 			}
 		case attemptNumber := <-sc.scaleUp:
+			log.Printf("DEBUG: attemptNumber := <-sc.scaleUp")
 			if replicas == 0 {
 				if err := sc.updateScale(resourceVersion, 1); err != nil {
 					log.Printf("ERROR: %s/%s: failed to scale up: %v %T",
@@ -294,6 +304,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				}
 			}
 		case <-time.After(1 * time.Second):
+			log.Printf("DEBUG: case <-time.After(1 * time.Second)")
 			if connCount > 0 {
 				sc.extendScaleDownAtMaybe(scaleDownAt)
 			}
@@ -361,7 +372,7 @@ func (sc *Scaler) updateScale(resourceVersion string, replicas int32) error {
 }
 
 func (sc *Scaler) UseConnection(f func() error) error {
-	log.Printf("DEBUG: entering saceler.UseConnection function")
+	log.Printf("DEBUG: entering scaler.UseConnection function")
 	sc.connectionInc <- 1
 	err := f()
 	sc.connectionInc <- -1
@@ -372,8 +383,11 @@ func (sc *Scaler) UseConnection(f func() error) error {
 // available. The returned channel may already be closed if upstream
 // is currently available.
 func (sc *Scaler) Available() (available chan struct{}) {
-	log.Printf("DEBUG: entering saceler.Available function")
+	log.Printf("DEBUG: entering scaler.Available function")
+
 	reply := make(chan chan struct{})
+
+	log.Printf("DEBUG: reply: %v", reply)
 	sc.availableRequest <- reply
 	return <-reply
 }

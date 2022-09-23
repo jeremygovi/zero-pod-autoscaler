@@ -87,8 +87,10 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 
 				select {
 				case <-sc.Available():
+					log.Printf("DEBUG: sc.available, ligne 90")
 					return proxy.ProxyTo(conn, target)
 				case <-time.After(0):
+					log.Printf("DEBUG: time.After(0): was not immediately available; continue below")
 					// was not immediately available; continue below
 				}
 
