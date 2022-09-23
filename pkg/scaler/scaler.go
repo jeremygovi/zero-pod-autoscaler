@@ -202,7 +202,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			log.Printf("DEBUG: sc.connectionInc")
 			connCount += i
 		case obj := <-sc.updated:
-			//log.Printf("DEBUG: sc.updated") -> passe tres souvent dedans
+			log.Printf("DEBUG: sc.updated") //-> passe tres souvent dedans
 			switch resource := obj.(type) {
 			case *corev1.Endpoints:
 				log.Printf("DEBUG: corev1.Endpoints")
@@ -210,10 +210,11 @@ func (sc *Scaler) Run(ctx context.Context) error {
 				nr := 0
 
 				for _, subset := range resource.Subsets {
+					log.Printf("DEBUG: for resource.Subsets")
 					r += len(subset.Addresses)
 					nr += len(subset.NotReadyAddresses)
 				}
-
+				log.Printf("DEBUG: END for resource.Subsets %+v -- %+v ", r, nr)
 				if r != readyAddresses || nr != notReadyAddresses {
 					log.Printf("INFO: %s/%s: readyAddresses=%d notReadyAddresses=%d",
 						"Endpoints", resource.Name, r, nr)

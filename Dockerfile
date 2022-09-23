@@ -11,7 +11,7 @@ RUN go mod download
 
 COPY . ./
 
-ENV GODEBUG=netdns=go+1
+ENV GODEBUG=netdns=cgo+1
 RUN CGO_ENABLED=1 go build .
 
 #############################

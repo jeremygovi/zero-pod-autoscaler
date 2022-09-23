@@ -101,6 +101,8 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 					return proxy.ProxyTo(conn, target)
 				case <-time.After(1 * time.Minute):
 					return fmt.Errorf("ERROR: Timed out waiting for available upstream (1 min wait)")
+				default:
+					log.Printf("DEBUG: SELECT default")
 				}
 			})
 			if err != nil {
