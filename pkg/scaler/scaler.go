@@ -267,6 +267,9 @@ func (sc *Scaler) Run(ctx context.Context) error {
 					}
 					replicas = *resource.Spec.Replicas
 				}
+			default:
+				log.Printf("DEBUG: sc.update resource: %+v", resource)
+
 			}
 		case obj := <-sc.deleted:
 			log.Printf("DEBUG: sc.deleted")
