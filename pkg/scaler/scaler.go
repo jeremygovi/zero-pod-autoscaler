@@ -324,9 +324,9 @@ func (sc *Scaler) Run(ctx context.Context) error {
 
 func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
 	log.Printf("DEBUG: START extendScaleDownAtMaybe %+v", scaleDownAt)
-	// if !time.Now().After(scaleDownAt.Add(sc.TTL / -2)) {
-	// 	return
-	// }
+	if !time.Now().After(scaleDownAt.Add(sc.TTL / -2)) {
+		return
+	}
 
 	path := fmt.Sprintf("/metadata/annotations/%s", JsonPatchEscape(KeyScaleDownAt))
 
