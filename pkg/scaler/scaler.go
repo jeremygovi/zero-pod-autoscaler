@@ -155,8 +155,8 @@ func New(
 
 func (sc *Scaler) TryConnect(ctx context.Context) error {
 	dialer := net.Dialer{}
-	timeout_ms := 10.0
-	factor := 5.0 // timeout series: 10, 50, 250, 1250, 6250, 31250
+	timeout_ms := 500.0
+	factor := 2.0 // timeout series: 500, 1s, 2s, 4s...
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -246,7 +246,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 
 				if resource.Spec.Replicas != nil {
 					if replicas != *resource.Spec.Replicas {
-						log.Printf("INFO: %s/%s: replicas: %d",
+						log.Printf("INFO: Received notification from kubernetes API: %s/%s: replicas: %d",
 							"Deployment", resource.Name, *resource.Spec.Replicas)
 					}
 					replicas = *resource.Spec.Replicas
@@ -255,9 +255,9 @@ func (sc *Scaler) Run(ctx context.Context) error {
 		case obj := <-sc.deleted:
 			switch resource := obj.(type) {
 			case *corev1.Endpoints:
-				log.Fatalf("%s/%s: deleted", "Endpoints", resource.Name)
+				log.Fatalf("INFO: Received notification from kubernetes API: %s/%s: deleted", "Endpoints", resource.Name)
 			case *appsv1.Deployment:
-				log.Fatalf("%s/%s: deleted", "Deployment", resource.Name)
+				log.Fatalf("INFO: Received notification from kubernetes API: %s/%s: deleted", "Deployment", resource.Name)
 			}
 		case reply := <-sc.availableRequest:
 			// set time to scale down

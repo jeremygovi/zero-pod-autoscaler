@@ -74,7 +74,7 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 
 		wg.Add(1)
 		go func() {
-			//start := time.Now()
+			start := time.Now()
 
 			defer wg.Done()
 			defer conn.Close()
@@ -85,21 +85,21 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 				// reporting available, but not much
 				// we can do
 
-				// select {
-				// case <-sc.Available():
-				// 	return proxy.ProxyTo(conn, target)
-				// case <-time.After(0):
-				// 	// was not immediately available; continue below
-				// }
+				select {
+				case <-sc.Available():
+					return proxy.ProxyTo(conn, target)
+				case <-time.After(0):
+					// was not immediately available; continue below
+				}
 
-				// log.Printf("INFO: Waiting for upstream %s to become available", target)
-				// select {
-				// case <-sc.Available():
-				// 	log.Printf("SUCCESS: Upstream available after %s", time.Since(start))
-				return proxy.ProxyTo(conn, target)
-				// case <-time.After(5 * time.Minute):
-				// 	return fmt.Errorf("ERROR: Timed out waiting for available upstream (5 min wait)")
-				// }
+				log.Printf("INFO: Waiting for upstream %s to become available", target)
+				select {
+				case <-sc.Available():
+					log.Printf("SUCCESS: Upstream available after %s", time.Since(start))
+					return proxy.ProxyTo(conn, target)
+				case <-time.After(5 * time.Minute):
+					return fmt.Errorf("ERROR: Timed out waiting for available upstream (5 min wait)")
+				}
 			})
 			if err != nil {
 				log.Printf("ERROR: Failed to proxy: %v", err)
