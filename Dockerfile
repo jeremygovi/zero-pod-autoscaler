@@ -11,12 +11,11 @@ RUN go mod download
 
 COPY . ./
 
-ENV GODEBUG=netdns=cgo+1
+ENV GODEBUG=netdns=Cgo+2
 RUN CGO_ENABLED=0 go build .
 
 #############################
 FROM debian:bullseye
 
 COPY --from=builder /src/zero-pod-autoscaler/zero-pod-autoscaler /bin/zero-pod-autoscaler
-ENV GODEBUG=netdns=cgo+1
-ENTRYPOINT [ "/bin/zero-pod-autoscaler" ]
+ENTRYPOINT [ "GODEBUG=netdns=Cgo+2 /bin/zero-pod-autoscaler" ]
