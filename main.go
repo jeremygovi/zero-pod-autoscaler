@@ -99,8 +99,8 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 				case <-sc.Available():
 					log.Printf("SUCCESS: Upstream available after %s", time.Since(start))
 					return proxy.ProxyTo(conn, target)
-				case <-time.After(5 * time.Minute):
-					return fmt.Errorf("ERROR: Timed out waiting for available upstream (5 min wait)")
+				case <-time.After(1 * time.Minute):
+					return fmt.Errorf("ERROR: Timed out waiting for available upstream (1 min wait)")
 				}
 			})
 			if err != nil {

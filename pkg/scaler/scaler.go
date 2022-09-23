@@ -272,7 +272,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			log.Printf("DEBUG: reply := <-sc.availableRequest")
 			// set time to scale down
 			sc.extendScaleDownAtMaybe(scaleDownAt)
-
+			log.Printf("DEBUG: AFTER sc.extendScaleDownAtMaybe")
 			if readyAddresses > 0 {
 				log.Printf("DEBUG: reply readyAddresses > 0")
 				// is currently available; send the already-closed channel
@@ -323,6 +323,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 }
 
 func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
+	log.Printf("DEBUG: START extendScaleDownAtMaybe")
 	if !time.Now().After(scaleDownAt.Add(sc.TTL / -2)) {
 		return
 	}
@@ -336,12 +337,14 @@ func (sc *Scaler) extendScaleDownAtMaybe(scaleDownAt time.Time) {
 			"value": time.Now().Add(sc.TTL).Format(time.RFC3339),
 		},
 	}
-
+	log.Printf("DEBUG: extendScaleDownAtMaybe BEFORE json.Marshal")
 	body, err := json.Marshal(patch)
+	log.Printf("DEBUG:  extendScaleDownAtMaybe AFTER json.Marshal")
 	if err != nil {
 		log.Printf("ERROR: failed to marshal patch to json: %v", err)
 	}
 
+	log.Printf("DEBUG:  extendScaleDownAtMaybe BEFORE Deployments PATCH")
 	if _, err := sc.Client.AppsV1().Deployments(sc.Namespace).
 		Patch(context.TODO(), sc.Name, types.JSONPatchType, body, metav1.PatchOptions{}); err != nil {
 		log.Printf("ERROR: %s/%s: failed to patch: %v",
