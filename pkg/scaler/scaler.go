@@ -320,7 +320,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 						"Deployment", sc.Name, err)
 				}
 			}
-			log.Printf("DEBUG: ELSE replicas %+v", replicas)
+			log.Printf("DEBUG: ELSE replicas: %+v connCount: %+v", replicas, connCount)
 		}
 	}
 }

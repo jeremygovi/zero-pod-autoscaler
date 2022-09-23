@@ -103,6 +103,7 @@ func Iterate(ctx context.Context, accepts chan acceptResult, wg sync.WaitGroup, 
 					return fmt.Errorf("ERROR: Timed out waiting for available upstream (1 min wait)")
 				default:
 					log.Printf("DEBUG: SELECT default")
+					return fmt.Errorf("ERROR: SELECT default")
 				}
 			})
 			if err != nil {
