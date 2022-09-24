@@ -209,7 +209,7 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			log.Printf("DEBUG: sc.connectionInc")
 			connCount += i
 		case obj := <-sc.updated:
-			log.Printf("DEBUG: sc.updated") //-> passe tres souvent dedans
+			log.Printf("DEBUG: sc.updated %+v", obj) //-> passe tres souvent dedans
 			switch resource := obj.(type) {
 			case *corev1.Endpoints:
 				log.Printf("DEBUG: corev1.Endpoints")
