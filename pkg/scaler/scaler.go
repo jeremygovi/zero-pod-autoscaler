@@ -206,46 +206,8 @@ func (sc *Scaler) Run(ctx context.Context) error {
 			log.Printf("DEBUG: ctx.done")
 			return fmt.Errorf("%v", ctx.Err())
 		case i := <-sc.connectionInc:
-			log.Printf("DEBUG: sc.connectionInc") /// la!!!!!!!!
+			log.Printf("DEBUG: sc.connectionInc") /// ici il faut call la tentative de connexion a l'endpoint?
 			connCount += i
-			log.Printf("DEBUG: corev1.Endpoints XXXXXXXXXXXXX")
-			r := 0
-			nr := 0
-
-			for _, subset := range resource.Subsets {
-				log.Printf("DEBUG: for resource.Subsets")
-				r += len(subset.Addresses)
-				nr += len(subset.NotReadyAddresses)
-			}
-			log.Printf("DEBUG: END for resource.Subsets %+v -- %+v ", r, nr)
-			if r != readyAddresses || nr != notReadyAddresses {
-				log.Printf("INFO: %s/%s: readyAddresses=%d notReadyAddresses=%d",
-					"Endpoints", resource.Name, r, nr)
-			}
-
-			readyAddresses, notReadyAddresses = r, nr
-
-			if readyAddresses == 0 {
-				continue
-			}
-
-			// nothing is waiting
-			if available == nil {
-				continue
-			}
-
-			log.Printf("INFO: %s/%s has ready addresses; confirming can connect to %s",
-				"Endpoints", resource.Name, sc.Target)
-
-			subctx, _ := context.WithTimeout(ctx, 15*time.Second)
-			if err := sc.TryConnect(subctx); err != nil {
-				log.Fatalf("ERROR: %s/%s has ready addresses but failed to connect to %s: %v",
-					"Endpoints", resource.Name, sc.Target, err)
-			}
-
-			log.Printf("INFO: %s available; notifying waiters", resource.Name)
-			close(available)
-			available = nil
 		case obj := <-sc.updated:
 			log.Printf("DEBUG: sc.updated %+v", obj) //-> passe tres souvent dedans
 			switch resource := obj.(type) {
